@@ -12,18 +12,20 @@ type Connection struct {
 	TCPConn      *net.TCPConn
 	ConnectionID uint32
 	isClosed     bool
-	handler      diface.HandleFunc
 	exitChan     chan bool
+
+	Router diface.IRouter
 }
 
 // NewConnection ...
-func NewConnection(conn *net.TCPConn, connectionID uint32, handler diface.HandleFunc) *Connection {
+func NewConnection(conn *net.TCPConn, connectionID uint32, router diface.IRouter) *Connection {
 	return &Connection{
 		TCPConn:      conn,
 		ConnectionID: connectionID,
 		isClosed:     false,
-		handler:      handler,
 		exitChan:     make(chan bool, 1),
+
+		Router: router,
 	}
 }
 
@@ -40,11 +42,17 @@ func (c *Connection) startReader() {
 			continue
 		}
 
-		err = c.handler(c.TCPConn, buf, cnt)
-		if err != nil {
-			fmt.Println("[Connection] failed to execute connection handler, err:", err)
-			return
+		req := &Request{
+			connection: c,
+			data:       buf,
+			cnt:        cnt,
 		}
+
+		go func(req diface.IRequest) {
+			c.Router.PreHandle(req)
+			c.Router.Handle(req)
+			c.Router.PostHandle(req)
+		}(req)
 	}
 }
 
@@ -82,5 +90,9 @@ func (c *Connection) RemoteAddr() string {
 
 // Send used to get send byte stream data to client
 func (c *Connection) Send(data []byte) error {
+	if _, err := c.TCPConn.Write(data); err != nil {
+		fmt.Printf("[Connection] connectionID = %d failed write data to client, err:%v\n", c.ConnectionID, err)
+		return err
+	}
 	return nil
 }

@@ -4,19 +4,7 @@ import (
 	"fmt"
 	"net"
 	"time"
-
-	"github.com/dmokel/dinx/dnet"
 )
-
-func main() {
-	go server()
-
-	time.Sleep(3 * time.Second)
-
-	go client()
-
-	select {}
-}
 
 func client() {
 	conn, err := net.Dial("tcp", "127.0.0.1:8999")
@@ -28,7 +16,7 @@ func client() {
 		cnt, err := conn.Write([]byte("HelloWorld"))
 		if err != nil {
 			fmt.Println("[Client] write bytes error: ", err)
-			continue
+			break
 		}
 		fmt.Println("[Client] send msg: HelloWorld")
 
@@ -44,7 +32,7 @@ func client() {
 	}
 }
 
-func server() {
-	srv := dnet.NewServer()
-	srv.Serve()
+func main() {
+	go client()
+	select {}
 }

@@ -12,6 +12,8 @@ type server struct {
 	Network string
 	IP      string
 	Port    int
+
+	Router diface.IRouter
 }
 
 var _ diface.IServer = &server{}
@@ -23,17 +25,9 @@ func NewServer() diface.IServer {
 		Network: "tcp",
 		IP:      "127.0.0.1",
 		Port:    8999,
-	}
-}
 
-func handler(conn *net.TCPConn, data []byte, cnt int) error {
-	fmt.Println("[Handler] write data back to client")
-	_, err := conn.Write(data[:cnt])
-	if err != nil {
-		fmt.Println("[Handler] failed to write back to client, err:", err)
-		return err
+		Router: nil,
 	}
-	return nil
 }
 
 func (s *server) Start() {
@@ -60,7 +54,7 @@ func (s *server) Start() {
 				continue
 			}
 
-			conn := NewConnection(tcpConn, uint32(cid), handler)
+			conn := NewConnection(tcpConn, uint32(cid), s.Router)
 			cid++
 			go conn.Start()
 		}
@@ -74,4 +68,10 @@ func (s *server) Serve() {
 
 	fmt.Println("[Server] Dinx Server Serve...")
 	select {}
+}
+
+// AddRouter ...
+func (s *server) AddRouter(router diface.IRouter) {
+	s.Router = router
+	fmt.Println("[Server] add router")
 }

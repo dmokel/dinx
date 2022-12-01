@@ -11,6 +11,3 @@ type IConnection interface {
 	RemoteAddr() string
 	Send(data []byte) error
 }
-
-// HandleFunc ...
-type HandleFunc func(*net.TCPConn, []byte, int) error
