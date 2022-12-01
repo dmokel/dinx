@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/dmokel/dinx/diface"
+	"github.com/dmokel/dinx/utils"
 )
 
 // Connection ...
@@ -35,7 +36,7 @@ func (c *Connection) startReader() {
 	defer c.Stop()
 
 	for {
-		buf := make([]byte, 512)
+		buf := make([]byte, utils.GlobalIns.MaxPackageSize)
 		cnt, err := c.TCPConn.Read(buf)
 		if err != nil {
 			fmt.Printf("[Connection] connectionID = %d failed to read bytes stream from tcp conn, err:%v\n", c.ConnectionID, err)

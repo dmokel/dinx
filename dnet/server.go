@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/dmokel/dinx/diface"
+	"github.com/dmokel/dinx/utils"
 )
 
 type server struct {
@@ -12,6 +13,7 @@ type server struct {
 	Network string
 	IP      string
 	Port    int
+	Version string
 
 	Router diface.IRouter
 }
@@ -21,10 +23,11 @@ var _ diface.IServer = &server{}
 // NewServer used to create the server instance
 func NewServer() diface.IServer {
 	return &server{
-		Name:    "default",
-		Network: "tcp",
-		IP:      "127.0.0.1",
-		Port:    8999,
+		Name:    utils.GlobalIns.Name,
+		Network: utils.GlobalIns.Network,
+		IP:      utils.GlobalIns.IP,
+		Port:    utils.GlobalIns.Port,
+		Version: utils.GlobalIns.Version,
 
 		Router: nil,
 	}
@@ -66,7 +69,7 @@ func (s *server) Stop() {}
 func (s *server) Serve() {
 	s.Start()
 
-	fmt.Println("[Server] Dinx Server Serve...")
+	fmt.Printf("[Server] %s, Version %s is serving...\n", s.Name, s.Version)
 	select {}
 }
 
