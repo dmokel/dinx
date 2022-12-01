@@ -26,44 +26,43 @@ func NewServer() diface.IServer {
 	}
 }
 
+func handler(conn *net.TCPConn, data []byte, cnt int) error {
+	fmt.Println("[Handler] write data back to client")
+	_, err := conn.Write(data[:cnt])
+	if err != nil {
+		fmt.Println("[Handler] failed to write back to client, err:", err)
+		return err
+	}
+	return nil
+}
+
 func (s *server) Start() {
 	go func() {
 		localAddr, err := net.ResolveTCPAddr(s.Network, fmt.Sprintf("%s:%d", s.IP, s.Port))
 		if err != nil {
-			fmt.Println("[Start] failed to resolve tcp addr, err: ", err)
+			fmt.Println("[Server] failed to resolve tcp addr, err: ", err)
 			return
 		}
 
 		listener, err := net.ListenTCP(s.Network, localAddr)
 		if err != nil {
-			fmt.Println("[Start] failed to create tcp listener, err: ", err)
+			fmt.Println("[Server] failed to create tcp listener, err: ", err)
 			return
 		}
-		fmt.Printf("[Start] success listening tcp connection at %s:%d\n", s.IP, s.Port)
+		fmt.Printf("[Server] success listening tcp connection at %s:%d\n", s.IP, s.Port)
+
+		cid := 0
 
 		for {
 			tcpConn, err := listener.AcceptTCP()
 			if err != nil {
-				fmt.Println("[Listening] failed to accept tcp connection, err: ", err)
+				fmt.Println("[Server] failed to accept tcp connection, err: ", err)
 				continue
 			}
 
-			go func() {
-				for {
-					buf := make([]byte, 512)
-					cnt, err := tcpConn.Read(buf)
-					if err != nil {
-						fmt.Println("read buf error: ", err)
-						continue
-					}
-
-					_, err = tcpConn.Write(buf[:cnt])
-					if err != nil {
-						fmt.Println("write buf error: ", err)
-						continue
-					}
-				}
-			}()
+			conn := NewConnection(tcpConn, uint32(cid), handler)
+			cid++
+			go conn.Start()
 		}
 	}()
 }
@@ -73,6 +72,6 @@ func (s *server) Stop() {}
 func (s *server) Serve() {
 	s.Start()
 
-	fmt.Println("[Serve] Dinx Server Serve...")
+	fmt.Println("[Server] Dinx Server Serve...")
 	select {}
 }
