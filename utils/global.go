@@ -16,9 +16,11 @@ type global struct {
 	Name    string
 
 	// Dinx
-	Version        string
-	MaxConn        int
-	MaxPackageSize uint32
+	Version          string
+	MaxConn          int
+	MaxPackageSize   uint32
+	WorkerPoolSize   uint32
+	MaxWorkerTaskNum uint32
 }
 
 // GlobalIns ...
@@ -38,13 +40,15 @@ func (g *global) reload() {
 
 func init() {
 	GlobalIns = &global{
-		Name:           "DinxDefault",
-		Version:        "V0.1",
-		Network:        "tcp",
-		IP:             "0.0.0.0",
-		Port:           8999,
-		MaxConn:        1000,
-		MaxPackageSize: 4096,
+		Name:             "DinxDefault",
+		Version:          "V0.1",
+		Network:          "tcp",
+		IP:               "0.0.0.0",
+		Port:             8999,
+		MaxConn:          1000,
+		MaxPackageSize:   4096,
+		WorkerPoolSize:   10,
+		MaxWorkerTaskNum: 1024,
 	}
 
 	GlobalIns.reload()

@@ -7,6 +7,7 @@ import (
 	"net"
 
 	"github.com/dmokel/dinx/diface"
+	"github.com/dmokel/dinx/utils"
 )
 
 // Connection ...
@@ -69,7 +70,11 @@ func (c *Connection) startReader() {
 			message:    msg,
 		}
 
-		go c.RouterGroup.DoMessageRouter(req)
+		if utils.GlobalIns.WorkerPoolSize > 0 {
+			c.RouterGroup.SendMsgToTaskQueue(req)
+		} else {
+			go c.RouterGroup.DoMessageRouter(req)
+		}
 	}
 }
 

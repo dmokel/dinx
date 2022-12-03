@@ -35,6 +35,8 @@ func NewServer() diface.IServer {
 
 func (s *server) Start() {
 	go func() {
+		s.RouterGroup.StartWorkerPool()
+
 		localAddr, err := net.ResolveTCPAddr(s.Network, fmt.Sprintf("%s:%d", s.IP, s.Port))
 		if err != nil {
 			fmt.Println("[Server] failed to resolve tcp addr, err: ", err)
