@@ -12,6 +12,8 @@ type RouterGroup struct {
 	Routers map[uint32]diface.IRouter
 }
 
+var _ diface.IRouterGroup = &RouterGroup{}
+
 // NewRouterGroup ...
 func NewRouterGroup() diface.IRouterGroup {
 	return &RouterGroup{

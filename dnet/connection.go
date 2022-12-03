@@ -14,6 +14,7 @@ type Connection struct {
 	TCPConn      *net.TCPConn
 	ConnectionID uint32
 	isClosed     bool
+	msgChan      chan []byte
 	exitChan     chan bool
 
 	RouterGroup diface.IRouterGroup
@@ -27,6 +28,7 @@ func NewConnection(conn *net.TCPConn, connectionID uint32, routerGroup diface.IR
 		TCPConn:      conn,
 		ConnectionID: connectionID,
 		isClosed:     false,
+		msgChan:      make(chan []byte),
 		exitChan:     make(chan bool, 1),
 
 		RouterGroup: routerGroup,
@@ -34,7 +36,7 @@ func NewConnection(conn *net.TCPConn, connectionID uint32, routerGroup diface.IR
 }
 
 func (c *Connection) startReader() {
-	fmt.Printf("[Connection] connectionID = %d reader is runnning\n", c.ConnectionID)
+	fmt.Printf("[Connection] connectionID = %d reader is running\n", c.ConnectionID)
 	defer fmt.Printf("[Connection] connectionID = %d reader exit\n", c.ConnectionID)
 	defer c.Stop()
 
@@ -71,10 +73,27 @@ func (c *Connection) startReader() {
 	}
 }
 
+func (c *Connection) startWriter() {
+	fmt.Printf("[Connection] connectionID = %d writer is running\n", c.ConnectionID)
+	defer fmt.Printf("[Connection] connectionID = %d writer exit\n", c.ConnectionID)
+
+	for {
+		select {
+		case data := <-c.msgChan:
+			if _, err := c.TCPConn.Write(data); err != nil {
+				fmt.Printf("[Connection] connectionID = %d failed to write data back to client, err:%v\n", c.ConnectionID, err)
+				return
+			}
+		case <-c.exitChan:
+			return
+		}
+	}
+}
+
 // Start used to start the connection processing logic
 func (c *Connection) Start() {
-	fmt.Printf("[Connection] connectionID = %d is starting\n", c.ConnectionID)
 	go c.startReader()
+	go c.startWriter()
 }
 
 // Stop used to close a connection
@@ -86,6 +105,7 @@ func (c *Connection) Stop() {
 	c.isClosed = true
 	c.TCPConn.Close()
 	close(c.exitChan)
+	close(c.msgChan)
 }
 
 // GetTCPConn used to get the low level tcp conn
@@ -121,9 +141,6 @@ func (c *Connection) SendMsg(msgID uint32, data []byte) error {
 		return err
 	}
 
-	if _, err := c.TCPConn.Write(buf); err != nil {
-		fmt.Printf("[Connection] connectionID = %d failed write data to client, err:%v\n", c.ConnectionID, err)
-		return err
-	}
+	c.msgChan <- buf
 	return nil
 }
