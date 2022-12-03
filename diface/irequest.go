@@ -4,5 +4,6 @@ package diface
 type IRequest interface {
 	GetConnection() IConnection
 	GetData() []byte
-	GetDataLength() int
+	GetMessageID() uint32
+	GetDataLength() uint32
 }

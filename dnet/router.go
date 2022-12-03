@@ -5,6 +5,8 @@ import "github.com/dmokel/dinx/diface"
 // BaseRouter ...
 type BaseRouter struct{}
 
+var _ diface.IRouter = &BaseRouter{}
+
 // PreHandle ...
 func (r *BaseRouter) PreHandle(req diface.IRequest) {}
 

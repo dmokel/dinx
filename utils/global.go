@@ -27,7 +27,7 @@ var GlobalIns *global
 func (g *global) reload() {
 	data, err := ioutil.ReadFile("conf/dinx.json")
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	err = json.Unmarshal(data, GlobalIns)
