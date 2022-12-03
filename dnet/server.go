@@ -15,7 +15,7 @@ type server struct {
 	Port    int
 	Version string
 
-	Router diface.IRouter
+	RouterGroup diface.IRouterGroup
 }
 
 var _ diface.IServer = &server{}
@@ -29,7 +29,7 @@ func NewServer() diface.IServer {
 		Port:    utils.GlobalIns.Port,
 		Version: utils.GlobalIns.Version,
 
-		Router: nil,
+		RouterGroup: NewRouterGroup(),
 	}
 }
 
@@ -57,7 +57,7 @@ func (s *server) Start() {
 				continue
 			}
 
-			conn := NewConnection(tcpConn, uint32(cid), s.Router)
+			conn := NewConnection(tcpConn, uint32(cid), s.RouterGroup)
 			cid++
 			go conn.Start()
 		}
@@ -74,7 +74,6 @@ func (s *server) Serve() {
 }
 
 // AddRouter ...
-func (s *server) AddRouter(router diface.IRouter) {
-	s.Router = router
-	fmt.Println("[Server] add router")
+func (s *server) AddRouter(msgID uint32, router diface.IRouter) {
+	s.RouterGroup.AddRouter(msgID, router)
 }

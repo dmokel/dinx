@@ -16,20 +16,20 @@ type Connection struct {
 	isClosed     bool
 	exitChan     chan bool
 
-	Router diface.IRouter
+	RouterGroup diface.IRouterGroup
 }
 
 var _ diface.IConnection = &Connection{}
 
 // NewConnection ...
-func NewConnection(conn *net.TCPConn, connectionID uint32, router diface.IRouter) *Connection {
+func NewConnection(conn *net.TCPConn, connectionID uint32, routerGroup diface.IRouterGroup) *Connection {
 	return &Connection{
 		TCPConn:      conn,
 		ConnectionID: connectionID,
 		isClosed:     false,
 		exitChan:     make(chan bool, 1),
 
-		Router: router,
+		RouterGroup: routerGroup,
 	}
 }
 
@@ -67,11 +67,7 @@ func (c *Connection) startReader() {
 			message:    msg,
 		}
 
-		go func(req diface.IRequest) {
-			c.Router.PreHandle(req)
-			c.Router.Handle(req)
-			c.Router.PostHandle(req)
-		}(req)
+		go c.RouterGroup.DoMessageRouter(req)
 	}
 }
 

@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"net"
 	"time"
 
+	"github.com/dmokel/dinx/diface"
 	"github.com/dmokel/dinx/dnet"
 )
 
@@ -18,43 +18,51 @@ func client(exit chan<- bool) {
 	}
 	pack := dnet.NewPack()
 	for {
-		msg := dnet.NewMessage()
-		msg.SetMsgID(0)
-		dataBuf := []byte("Hello, This is client one")
-		msg.SetData(dataBuf)
-		msg.SetDataLen(uint32(len(dataBuf)))
-		buf, err := pack.Pack(msg)
-		if err != nil {
-			fmt.Println("failed to pack msg, err:", err)
+		if err := sendMsg1(conn, pack); err != nil {
 			break
 		}
-		if _, err := conn.Write(buf); err != nil {
-			fmt.Println("failed to write buffer conn, err:", err)
+		if err := sendMsg2(conn, pack); err != nil {
 			break
 		}
-
-		headBuf := make([]byte, pack.GetHeadLen())
-		if _, err := io.ReadFull(conn, headBuf); err != nil {
-			fmt.Println("failed to read head buf from server, err:", err)
-			break
-		}
-		msg, err = pack.Unpack(headBuf)
-		if err != nil {
-			fmt.Println("failed to upack head buf, err:", err)
-			break
-		}
-		dataBuf = make([]byte, msg.GetDataLen())
-		if msg.GetDataLen() > 0 {
-			if _, err := io.ReadFull(conn, dataBuf); err != nil {
-				fmt.Println("failed to read data buf from server, err:", err)
-				break
-			}
-		}
-		msg.SetData(dataBuf)
-		fmt.Printf("receive msg from server, msgID = %d, dataLen = %d, data:%s\n", msg.GetMsgID(), msg.GetDataLen(), msg.GetData())
 		time.Sleep(2 * time.Second)
 	}
 	exit <- true
+}
+
+func sendMsg1(conn net.Conn, pack diface.IPack) error {
+	msg := dnet.NewMessage()
+	msg.SetMsgID(1)
+	dataBuf := []byte("Hello, This is client one")
+	msg.SetData(dataBuf)
+	msg.SetDataLen(uint32(len(dataBuf)))
+	buf, err := pack.Pack(msg)
+	if err != nil {
+		fmt.Println("failed to pack msg, err:", err)
+		return err
+	}
+	if _, err := conn.Write(buf); err != nil {
+		fmt.Println("failed to write buffer conn, err:", err)
+		return err
+	}
+	return nil
+}
+
+func sendMsg2(conn net.Conn, pack diface.IPack) error {
+	msg := dnet.NewMessage()
+	msg.SetMsgID(2)
+	dataBuf := []byte("Hello, This is client two")
+	msg.SetData(dataBuf)
+	msg.SetDataLen(uint32(len(dataBuf)))
+	buf, err := pack.Pack(msg)
+	if err != nil {
+		fmt.Println("failed to pack msg, err:", err)
+		return err
+	}
+	if _, err := conn.Write(buf); err != nil {
+		fmt.Println("failed to write buffer conn, err:", err)
+		return err
+	}
+	return nil
 }
 
 func main() {
