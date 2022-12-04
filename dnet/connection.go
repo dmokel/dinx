@@ -12,7 +12,7 @@ import (
 )
 
 // Connection ...
-type Connection struct {
+type connection struct {
 	Server       diface.IServer
 	TCPConn      *net.TCPConn
 	ConnectionID uint32
@@ -26,11 +26,11 @@ type Connection struct {
 	RouterGroup diface.IRouterGroup
 }
 
-var _ diface.IConnection = &Connection{}
+var _ diface.IConnection = &connection{}
 
 // NewConnection ...
-func NewConnection(server diface.IServer, conn *net.TCPConn, connectionID uint32, routerGroup diface.IRouterGroup) *Connection {
-	c := &Connection{
+func newConnection(server diface.IServer, conn *net.TCPConn, connectionID uint32, routerGroup diface.IRouterGroup) diface.IConnection {
+	c := &connection{
 		Server:       server,
 		TCPConn:      conn,
 		ConnectionID: connectionID,
@@ -47,12 +47,12 @@ func NewConnection(server diface.IServer, conn *net.TCPConn, connectionID uint32
 	return c
 }
 
-func (c *Connection) startReader() {
+func (c *connection) startReader() {
 	fmt.Printf("[Connection] connectionID = %d reader is running\n", c.ConnectionID)
 	defer fmt.Printf("[Connection] connectionID = %d reader exit\n", c.ConnectionID)
 	defer c.Close()
 
-	pack := NewPack()
+	pack := newPack()
 	for {
 		headBuf := make([]byte, pack.GetHeadLen())
 		if _, err := io.ReadFull(c.TCPConn, headBuf); err != nil {
@@ -76,7 +76,7 @@ func (c *Connection) startReader() {
 		}
 		msg.SetData(dataBuf)
 
-		req := &Request{
+		req := &request{
 			connection: c,
 			message:    msg,
 		}
@@ -89,7 +89,7 @@ func (c *Connection) startReader() {
 	}
 }
 
-func (c *Connection) startWriter() {
+func (c *connection) startWriter() {
 	fmt.Printf("[Connection] connectionID = %d writer is running\n", c.ConnectionID)
 	defer fmt.Printf("[Connection] connectionID = %d writer exit\n", c.ConnectionID)
 
@@ -107,14 +107,14 @@ func (c *Connection) startWriter() {
 }
 
 // Start used to start the connection processing logic
-func (c *Connection) Start() {
+func (c *connection) Start() {
 	c.Server.CallOnConnStart(c)
 	go c.startReader()
 	go c.startWriter()
 }
 
 // Close used to close a connection
-func (c *Connection) Close() {
+func (c *connection) Close() {
 	if c.isClosed == true {
 		return
 	}
@@ -128,27 +128,27 @@ func (c *Connection) Close() {
 }
 
 // GetTCPConn used to get the low level tcp conn
-func (c *Connection) GetTCPConn() *net.TCPConn {
+func (c *connection) GetTCPConn() *net.TCPConn {
 	return c.TCPConn
 }
 
 // GetConnectionID used to get the connection id
-func (c *Connection) GetConnectionID() uint32 {
+func (c *connection) GetConnectionID() uint32 {
 	return c.ConnectionID
 }
 
 // RemoteAddr used to get the connection's remote addr
-func (c *Connection) RemoteAddr() string {
+func (c *connection) RemoteAddr() string {
 	return c.TCPConn.RemoteAddr().String()
 }
 
 // SendMsg used to get send byte data to client
-func (c *Connection) SendMsg(msgID uint32, data []byte) error {
+func (c *connection) SendMsg(msgID uint32, data []byte) error {
 	if c.isClosed == true {
 		return errors.New(`connection closed`)
 	}
 
-	pack := NewPack()
+	pack := newPack()
 	msg := &message{
 		msgID:   msgID,
 		dataLen: uint32(len(data)),
@@ -165,7 +165,7 @@ func (c *Connection) SendMsg(msgID uint32, data []byte) error {
 }
 
 // SetProperty ...
-func (c *Connection) SetProperty(key string, value interface{}) error {
+func (c *connection) SetProperty(key string, value interface{}) error {
 	c.propertyLock.Lock()
 	defer c.propertyLock.Unlock()
 
@@ -177,7 +177,7 @@ func (c *Connection) SetProperty(key string, value interface{}) error {
 }
 
 // GetProperty ...
-func (c *Connection) GetProperty(key string) (interface{}, error) {
+func (c *connection) GetProperty(key string) (interface{}, error) {
 	c.propertyLock.RLock()
 	defer c.propertyLock.RUnlock()
 
@@ -188,7 +188,7 @@ func (c *Connection) GetProperty(key string) (interface{}, error) {
 }
 
 // RemoveProperty ...
-func (c *Connection) RemoveProperty(key string) error {
+func (c *connection) RemoveProperty(key string) error {
 	c.propertyLock.Lock()
 	defer c.propertyLock.Unlock()
 

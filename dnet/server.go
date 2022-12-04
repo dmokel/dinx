@@ -33,8 +33,8 @@ func NewServer() diface.IServer {
 		Port:    utils.GlobalIns.Port,
 		Version: utils.GlobalIns.Version,
 
-		RouterGroup: NewRouterGroup(),
-		connManager: NewConnectionManager(),
+		RouterGroup: newRouterGroup(),
+		connManager: newConnectionManager(),
 	}
 }
 
@@ -70,7 +70,7 @@ func (s *server) Start() {
 				continue
 			}
 
-			conn := NewConnection(s, tcpConn, uint32(cid), s.RouterGroup)
+			conn := newConnection(s, tcpConn, uint32(cid), s.RouterGroup)
 			cid++
 			go conn.Start()
 		}

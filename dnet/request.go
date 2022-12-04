@@ -3,29 +3,29 @@ package dnet
 import "github.com/dmokel/dinx/diface"
 
 // Request used to pack connection and data
-type Request struct {
+type request struct {
 	connection diface.IConnection
 	message    diface.IMessage
 }
 
-var _ diface.IRequest = &Request{}
+var _ diface.IRequest = &request{}
 
 // GetConnection ...
-func (r *Request) GetConnection() diface.IConnection {
+func (r *request) GetConnection() diface.IConnection {
 	return r.connection
 }
 
 // GetMessageID ...
-func (r *Request) GetMessageID() uint32 {
+func (r *request) GetMessageID() uint32 {
 	return r.message.GetMsgID()
 }
 
 // GetData ...
-func (r *Request) GetData() []byte {
+func (r *request) GetData() []byte {
 	return r.message.GetData()
 }
 
 // GetDataLength ...
-func (r *Request) GetDataLength() uint32 {
+func (r *request) GetDataLength() uint32 {
 	return r.message.GetDataLen()
 }

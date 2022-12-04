@@ -8,22 +8,22 @@ import (
 )
 
 // ConnectionManager ...
-type ConnectionManager struct {
+type connectionManager struct {
 	connections map[uint32]diface.IConnection
 	lock        sync.RWMutex
 }
 
 // NewConnectionManager ...
-func NewConnectionManager() diface.IConnectionManager {
-	return &ConnectionManager{
+func newConnectionManager() diface.IConnectionManager {
+	return &connectionManager{
 		connections: make(map[uint32]diface.IConnection),
 	}
 }
 
-var _ diface.IConnectionManager = &ConnectionManager{}
+var _ diface.IConnectionManager = &connectionManager{}
 
 // Add ...
-func (cm *ConnectionManager) Add(connection diface.IConnection) {
+func (cm *connectionManager) Add(connection diface.IConnection) {
 	cm.lock.Lock()
 	defer cm.lock.Unlock()
 
@@ -31,7 +31,7 @@ func (cm *ConnectionManager) Add(connection diface.IConnection) {
 }
 
 // Remove ...
-func (cm *ConnectionManager) Remove(connection diface.IConnection) {
+func (cm *connectionManager) Remove(connection diface.IConnection) {
 	cm.lock.Lock()
 	defer cm.lock.Unlock()
 
@@ -39,12 +39,12 @@ func (cm *ConnectionManager) Remove(connection diface.IConnection) {
 }
 
 // Num ...
-func (cm *ConnectionManager) Num() int {
+func (cm *connectionManager) Num() int {
 	return len(cm.connections)
 }
 
 // GetConnection ...
-func (cm *ConnectionManager) GetConnection(connID uint32) (diface.IConnection, error) {
+func (cm *connectionManager) GetConnection(connID uint32) (diface.IConnection, error) {
 	cm.lock.RLock()
 	defer cm.lock.RUnlock()
 
@@ -55,7 +55,7 @@ func (cm *ConnectionManager) GetConnection(connID uint32) (diface.IConnection, e
 }
 
 // Clear ...
-func (cm *ConnectionManager) Clear() {
+func (cm *connectionManager) Clear() {
 	cm.lock.Lock()
 	defer cm.lock.Unlock()
 

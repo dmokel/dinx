@@ -23,7 +23,7 @@ func TestPack(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		pack := NewPack()
+		pack := newPack()
 		msgCount := 0
 		for {
 			headBuf := make([]byte, pack.GetHeadLen())
@@ -72,7 +72,7 @@ func TestPack(t *testing.T) {
 		data:    data2,
 	}
 
-	pack := NewPack()
+	pack := newPack()
 	buf1, err := pack.Pack(msg1)
 	if err != nil {
 		t.Fatal(err)

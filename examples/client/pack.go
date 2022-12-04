@@ -1,21 +1,18 @@
-package dnet
+package main
 
 import (
 	"bytes"
 	"encoding/binary"
 	"errors"
 
-	"github.com/dmokel/dinx/diface"
 	"github.com/dmokel/dinx/utils"
 )
 
 // Pack ...
 type pack struct{}
 
-var _ diface.IPack = &pack{}
-
 // NewPack ...
-func newPack() diface.IPack {
+func newPack() *pack {
 	return &pack{}
 }
 
@@ -26,26 +23,32 @@ func (p *pack) GetHeadLen() uint32 {
 }
 
 // Pack ...
-func (p *pack) Pack(msg diface.IMessage) ([]byte, error) {
+func (p *pack) Pack(msg *message) ([]byte, error) {
 	buffer := bytes.NewBuffer([]byte{})
 
-	if err := binary.Write(buffer, binary.LittleEndian, msg.GetDataLen()); err != nil {
+	if err := binary.Write(buffer, binary.LittleEndian, msg.dataLen); err != nil {
 		return nil, err
 	}
 
-	if err := binary.Write(buffer, binary.LittleEndian, msg.GetMsgID()); err != nil {
+	if err := binary.Write(buffer, binary.LittleEndian, msg.msgID); err != nil {
 		return nil, err
 	}
 
-	if err := binary.Write(buffer, binary.LittleEndian, msg.GetData()); err != nil {
+	if err := binary.Write(buffer, binary.LittleEndian, msg.data); err != nil {
 		return nil, err
 	}
 
 	return buffer.Bytes(), nil
 }
 
+type message struct {
+	dataLen uint32
+	msgID   uint32
+	data    []byte
+}
+
 // Unpack ...
-func (p *pack) Unpack(headData []byte) (diface.IMessage, error) {
+func (p *pack) Unpack(headData []byte) (*message, error) {
 	reader := bytes.NewReader(headData)
 	msg := &message{}
 

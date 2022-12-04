@@ -11,11 +11,6 @@ type message struct {
 
 var _ diface.IMessage = &message{}
 
-// NewMessage ...
-func NewMessage() diface.IMessage {
-	return &message{}
-}
-
 // GetDataLen ...
 func (m *message) GetDataLen() uint32 {
 	return m.dataLen

@@ -5,9 +5,6 @@ import (
 	"io"
 	"net"
 	"time"
-
-	"github.com/dmokel/dinx/diface"
-	"github.com/dmokel/dinx/dnet"
 )
 
 var exit = make(chan bool)
@@ -25,8 +22,9 @@ func client() {
 }
 
 func reader(conn net.Conn) {
-	pack := dnet.NewPack()
 	defer close(exit)
+
+	pack := newPack()
 	for {
 		headBuf := make([]byte, pack.GetHeadLen())
 		if _, err := io.ReadFull(conn, headBuf); err != nil {
@@ -38,20 +36,20 @@ func reader(conn net.Conn) {
 			fmt.Println("failed to upack head buf, err:", err)
 			break
 		}
-		dataBuf := make([]byte, msg.GetDataLen())
-		if msg.GetDataLen() > 0 {
+		dataBuf := make([]byte, msg.dataLen)
+		if msg.dataLen > 0 {
 			if _, err := io.ReadFull(conn, dataBuf); err != nil {
 				fmt.Println("failed to read data buf from server, err:", err)
 				break
 			}
 		}
-		msg.SetData(dataBuf)
-		fmt.Printf("receive msg from server, msgID = %d, dataLen = %d, data:%s\n", msg.GetMsgID(), msg.GetDataLen(), msg.GetData())
+		msg.data = dataBuf
+		fmt.Printf("receive msg from server, msgID = %d, dataLen = %d, data:%s\n", msg.msgID, msg.dataLen, msg.data)
 	}
 }
 
 func writer(conn net.Conn) {
-	pack := dnet.NewPack()
+	pack := newPack()
 	for {
 		select {
 		case <-exit:
@@ -69,12 +67,12 @@ func writer(conn net.Conn) {
 	}
 }
 
-func sendMsg1(conn net.Conn, pack diface.IPack) error {
-	msg := dnet.NewMessage()
-	msg.SetMsgID(1)
+func sendMsg1(conn net.Conn, pack *pack) error {
+	msg := &message{}
+	msg.msgID = 1
 	dataBuf := []byte("Hello, This is client one")
-	msg.SetData(dataBuf)
-	msg.SetDataLen(uint32(len(dataBuf)))
+	msg.data = dataBuf
+	msg.dataLen = uint32(len(dataBuf))
 	buf, err := pack.Pack(msg)
 	if err != nil {
 		fmt.Println("failed to pack msg, err:", err)
@@ -87,12 +85,12 @@ func sendMsg1(conn net.Conn, pack diface.IPack) error {
 	return nil
 }
 
-func sendMsg2(conn net.Conn, pack diface.IPack) error {
-	msg := dnet.NewMessage()
-	msg.SetMsgID(2)
+func sendMsg2(conn net.Conn, pack *pack) error {
+	msg := &message{}
+	msg.msgID = 2
 	dataBuf := []byte("Hello, This is client two")
-	msg.SetData(dataBuf)
-	msg.SetDataLen(uint32(len(dataBuf)))
+	msg.data = dataBuf
+	msg.dataLen = uint32(len(dataBuf))
 	buf, err := pack.Pack(msg)
 	if err != nil {
 		fmt.Println("failed to pack msg, err:", err)
