@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"sync"
 
 	"github.com/dmokel/dinx/diface"
 	"github.com/dmokel/dinx/utils"
@@ -18,6 +19,9 @@ type Connection struct {
 	isClosed     bool
 	msgChan      chan []byte
 	exitChan     chan bool
+
+	propertys    map[string]interface{}
+	propertyLock sync.RWMutex
 
 	RouterGroup diface.IRouterGroup
 }
@@ -33,6 +37,8 @@ func NewConnection(server diface.IServer, conn *net.TCPConn, connectionID uint32
 		isClosed:     false,
 		msgChan:      make(chan []byte),
 		exitChan:     make(chan bool, 1),
+
+		propertys: make(map[string]interface{}),
 
 		RouterGroup: routerGroup,
 	}
@@ -155,5 +161,40 @@ func (c *Connection) SendMsg(msgID uint32, data []byte) error {
 	}
 
 	c.msgChan <- buf
+	return nil
+}
+
+// SetProperty ...
+func (c *Connection) SetProperty(key string, value interface{}) error {
+	c.propertyLock.Lock()
+	defer c.propertyLock.Unlock()
+
+	if _, ok := c.propertys[key]; ok {
+		return errors.New("duplicate key")
+	}
+	c.propertys[key] = value
+	return nil
+}
+
+// GetProperty ...
+func (c *Connection) GetProperty(key string) (interface{}, error) {
+	c.propertyLock.RLock()
+	defer c.propertyLock.RUnlock()
+
+	if v, ok := c.propertys[key]; ok {
+		return v, nil
+	}
+	return nil, errors.New("not match any key")
+}
+
+// RemoveProperty ...
+func (c *Connection) RemoveProperty(key string) error {
+	c.propertyLock.Lock()
+	defer c.propertyLock.Unlock()
+
+	if _, ok := c.propertys[key]; !ok {
+		return errors.New("not match any key")
+	}
+	delete(c.propertys, key)
 	return nil
 }

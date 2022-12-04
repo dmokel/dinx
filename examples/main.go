@@ -38,9 +38,12 @@ func main() {
 
 	srv.SetOnConnStart(func(conn diface.IConnection) {
 		fmt.Printf("[Hook] connectionID = %d start\n", conn.GetConnectionID())
+		conn.SetProperty("key", "custom key value")
 	})
 	srv.SetOnConnClose(func(conn diface.IConnection) {
 		fmt.Printf("[Hook] connectionID =%d close\n", conn.GetConnectionID())
+		value, _ := conn.GetProperty("key")
+		fmt.Println("value:", value)
 	})
 
 	srv.AddRouter(1, &router1{})
