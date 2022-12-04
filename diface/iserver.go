@@ -6,5 +6,6 @@ type IServer interface {
 	Stop()
 	Serve()
 
+	GetConnectionManager() IConnectionManager
 	AddRouter(msgID uint32, router IRouter)
 }

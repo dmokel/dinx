@@ -5,7 +5,7 @@ import "net"
 // IConnection ...
 type IConnection interface {
 	Start()
-	Stop()
+	Close()
 	GetTCPConn() *net.TCPConn
 	GetConnectionID() uint32
 	RemoteAddr() string

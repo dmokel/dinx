@@ -16,6 +16,7 @@ type server struct {
 	Version string
 
 	RouterGroup diface.IRouterGroup
+	connManager diface.IConnectionManager
 }
 
 var _ diface.IServer = &server{}
@@ -30,6 +31,7 @@ func NewServer() diface.IServer {
 		Version: utils.GlobalIns.Version,
 
 		RouterGroup: NewRouterGroup(),
+		connManager: NewConnectionManager(),
 	}
 }
 
@@ -59,20 +61,32 @@ func (s *server) Start() {
 				continue
 			}
 
-			conn := NewConnection(tcpConn, uint32(cid), s.RouterGroup)
+			if s.connManager.Num() >= utils.GlobalIns.MaxConn {
+				fmt.Println("to many connections")
+				tcpConn.Close()
+				continue
+			}
+
+			conn := NewConnection(s, tcpConn, uint32(cid), s.RouterGroup)
 			cid++
 			go conn.Start()
 		}
 	}()
 }
 
-func (s *server) Stop() {}
+func (s *server) Stop() {
+	s.connManager.Clear()
+}
 
 func (s *server) Serve() {
 	s.Start()
 
 	fmt.Printf("[Server] %s, Version %s is serving...\n", s.Name, s.Version)
 	select {}
+}
+
+func (s *server) GetConnectionManager() diface.IConnectionManager {
+	return s.connManager
 }
 
 // AddRouter ...

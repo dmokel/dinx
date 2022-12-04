@@ -12,6 +12,7 @@ import (
 
 // Connection ...
 type Connection struct {
+	Server       diface.IServer
 	TCPConn      *net.TCPConn
 	ConnectionID uint32
 	isClosed     bool
@@ -24,8 +25,9 @@ type Connection struct {
 var _ diface.IConnection = &Connection{}
 
 // NewConnection ...
-func NewConnection(conn *net.TCPConn, connectionID uint32, routerGroup diface.IRouterGroup) *Connection {
-	return &Connection{
+func NewConnection(server diface.IServer, conn *net.TCPConn, connectionID uint32, routerGroup diface.IRouterGroup) *Connection {
+	c := &Connection{
+		Server:       server,
 		TCPConn:      conn,
 		ConnectionID: connectionID,
 		isClosed:     false,
@@ -34,12 +36,15 @@ func NewConnection(conn *net.TCPConn, connectionID uint32, routerGroup diface.IR
 
 		RouterGroup: routerGroup,
 	}
+
+	c.Server.GetConnectionManager().Add(c)
+	return c
 }
 
 func (c *Connection) startReader() {
 	fmt.Printf("[Connection] connectionID = %d reader is running\n", c.ConnectionID)
 	defer fmt.Printf("[Connection] connectionID = %d reader exit\n", c.ConnectionID)
-	defer c.Stop()
+	defer c.Close()
 
 	pack := NewPack()
 	for {
@@ -101,14 +106,15 @@ func (c *Connection) Start() {
 	go c.startWriter()
 }
 
-// Stop used to close a connection
-func (c *Connection) Stop() {
+// Close used to close a connection
+func (c *Connection) Close() {
 	if c.isClosed == true {
 		return
 	}
 
 	c.isClosed = true
 	c.TCPConn.Close()
+	c.Server.GetConnectionManager().Remove(c)
 	close(c.exitChan)
 	close(c.msgChan)
 }

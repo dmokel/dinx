@@ -3,5 +3,6 @@
   "Network": "tcp",
   "IP": "127.0.0.1",
   "Port": 8999,
-  "WorkerPoolSize": 8
+  "WorkerPoolSize": 8,
+  "MaxConn": 2
 }
