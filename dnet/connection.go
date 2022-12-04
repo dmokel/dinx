@@ -102,6 +102,7 @@ func (c *Connection) startWriter() {
 
 // Start used to start the connection processing logic
 func (c *Connection) Start() {
+	c.Server.CallOnConnStart(c)
 	go c.startReader()
 	go c.startWriter()
 }
@@ -112,6 +113,7 @@ func (c *Connection) Close() {
 		return
 	}
 
+	c.Server.CallOnConnClose(c)
 	c.isClosed = true
 	c.TCPConn.Close()
 	c.Server.GetConnectionManager().Remove(c)

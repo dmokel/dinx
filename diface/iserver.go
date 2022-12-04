@@ -8,4 +8,12 @@ type IServer interface {
 
 	GetConnectionManager() IConnectionManager
 	AddRouter(msgID uint32, router IRouter)
+
+	SetOnConnStart(onConnStart ConnHookFunc)
+	SetOnConnClose(onConnClose ConnHookFunc)
+	CallOnConnStart(connnection IConnection)
+	CallOnConnClose(connnection IConnection)
 }
+
+// ConnHookFunc ...
+type ConnHookFunc func(conn IConnection)

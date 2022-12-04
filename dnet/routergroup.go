@@ -63,7 +63,7 @@ func (rg *RouterGroup) StartWorkerPool() {
 }
 
 func (rg *RouterGroup) startWorker(workerID int, taskQueue chan diface.IRequest) {
-	fmt.Printf("[Server] Worker runnning, workerID = %d\n", workerID)
+	fmt.Printf("[Server] Worker running, workerID = %d\n", workerID)
 	for {
 		select {
 		case req := <-taskQueue:

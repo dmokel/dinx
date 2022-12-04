@@ -36,6 +36,13 @@ func (r *router2) Handle(req diface.IRequest) {
 func main() {
 	srv := dnet.NewServer()
 
+	srv.SetOnConnStart(func(conn diface.IConnection) {
+		fmt.Printf("[Hook] connectionID = %d start\n", conn.GetConnectionID())
+	})
+	srv.SetOnConnClose(func(conn diface.IConnection) {
+		fmt.Printf("[Hook] connectionID =%d close\n", conn.GetConnectionID())
+	})
+
 	srv.AddRouter(1, &router1{})
 	srv.AddRouter(2, &router2{})
 

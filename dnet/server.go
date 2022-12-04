@@ -17,6 +17,9 @@ type server struct {
 
 	RouterGroup diface.IRouterGroup
 	connManager diface.IConnectionManager
+
+	onConnstart diface.ConnHookFunc
+	onConnClose diface.ConnHookFunc
 }
 
 var _ diface.IServer = &server{}
@@ -92,4 +95,24 @@ func (s *server) GetConnectionManager() diface.IConnectionManager {
 // AddRouter ...
 func (s *server) AddRouter(msgID uint32, router diface.IRouter) {
 	s.RouterGroup.AddRouter(msgID, router)
+}
+
+func (s *server) SetOnConnStart(onConnStart diface.ConnHookFunc) {
+	s.onConnstart = onConnStart
+}
+
+func (s *server) SetOnConnClose(onConnClose diface.ConnHookFunc) {
+	s.onConnClose = onConnClose
+}
+
+func (s *server) CallOnConnStart(connection diface.IConnection) {
+	if s.onConnstart != nil {
+		s.onConnstart(connection)
+	}
+}
+
+func (s *server) CallOnConnClose(connection diface.IConnection) {
+	if s.onConnClose != nil {
+		s.onConnClose(connection)
+	}
 }
